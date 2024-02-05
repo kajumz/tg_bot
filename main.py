@@ -7,12 +7,25 @@ bot = AsyncTeleBot('6000559993:AAFl7pLjyLw6tWeSa31-OZ0_muDyPAE9INQ')
 conn = sqlite3.connect('test.db')
 cursor = conn.cursor()
 print('1')
-#make dictionary
+li = ['Иванов', 'Сидоров', 'Петров']
+
+us_input = str()
+
 @bot.message_handler(commands=['start'])
 async def st(message):
-    await bot.send_message(message.chat.id, 'Введите')
-@bot.message_handler(commands=['help'])
+    await bot.send_message(message.chat.id, 'Введите свою фамилию и имя в следующем формате: \n'
+                                            'Иванов' )
+
+
+@bot.message_handler(func= lambda message: message.text in li)
 async def start_message(message):
+    global us_input
+    us_input = message.text
+    chat_id = message.chat.id
+    user_id = message.from_user.id
+    print(us_input)
+    print(chat_id)
+    print(user_id)
     markup = ReplyKeyboardMarkup(resize_keyboard=True)
     btn1 = KeyboardButton('\U0001F4B0 Инвестиционный портфель')
     btn2 = KeyboardButton('\U0001f3e6 Денежные операции')
@@ -29,14 +42,22 @@ async def start_message(message):
                                                             '\u2B05 Главное меню'])
 async def head_menu(message):
     if (message.text == '\U0001F4B0 Инвестиционный портфель'):
+
         markup = ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
         btn1 = KeyboardButton('\U0001F4B1 Договор')
         btn2 = KeyboardButton('\u2B05 Главное меню')
         markup.add(btn1, btn2)
-        name = 'Иванов'
-        cursor.execute("SELECT all_money FROM main WHERE Last_name = ?", (name,))
+        print(us_input)
+        cursor.execute("SELECT id, sum(all_money) "
+                       "FROM main "
+                       "WHERE id = ?"
+                       "GROUP by id", (us_input[name],))
         results = cursor.fetchall()
-        await bot.send_message(message.chat.id, results[0][0], reply_markup=markup)
+        if results:
+            await bot.send_message(message.chat.id, 'Всего: ' + str(results[0][1]), reply_markup=markup)
+        else:
+            await bot.send_message(message.chat.id, "Нет данных по данному запросу", reply_markup=markup)
+
     elif (message.text == '\U0001f3e6 Денежные операции'):
         markup_one = ReplyKeyboardMarkup(resize_keyboard=True)
         btn1 = KeyboardButton('Пополнить')
@@ -98,11 +119,12 @@ async def chat_with_manager(message):
         markup.add(btn1, btn2, btn3)
         await bot.send_message(message.chat.id, 'выбрать действие', reply_markup=markup)
 
-@bot.message_handler(func= lambda message: True)
-async def save_input(message):
-    user_input = message.text
-    print(user_input)
-    await bot.send_message(message.chat.id, 'Вы ввели ' + user_input)
+#@bot.message_handler(func= lambda message: True)
+#async def save_input(message):
+#    user_input = message.text
+#    li.append(user_input)
+#    #print(user_input)
+#    await bot.send_message(message.chat.id, 'Вы ввели ' + user_input)
 
 
 
