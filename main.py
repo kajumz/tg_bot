@@ -7,7 +7,11 @@ bot = AsyncTeleBot('6000559993:AAFl7pLjyLw6tWeSa31-OZ0_muDyPAE9INQ')
 conn = sqlite3.connect('test.db')
 cursor = conn.cursor()
 print('1')
+#make dictionary
 @bot.message_handler(commands=['start'])
+async def st(message):
+    await bot.send_message(message.chat.id, 'Введите')
+@bot.message_handler(commands=['help'])
 async def start_message(message):
     markup = ReplyKeyboardMarkup(resize_keyboard=True)
     btn1 = KeyboardButton('\U0001F4B0 Инвестиционный портфель')
@@ -94,6 +98,11 @@ async def chat_with_manager(message):
         markup.add(btn1, btn2, btn3)
         await bot.send_message(message.chat.id, 'выбрать действие', reply_markup=markup)
 
+@bot.message_handler(func= lambda message: True)
+async def save_input(message):
+    user_input = message.text
+    print(user_input)
+    await bot.send_message(message.chat.id, 'Вы ввели ' + user_input)
 
 
 
