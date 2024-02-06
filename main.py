@@ -11,23 +11,26 @@ li = ['Иванов', 'Сидоров', 'Петров']
 
 us_input = str()
 dic = dict()
+
+
 @bot.message_handler(commands=['start'])
 async def st(message):
     await bot.send_message(message.chat.id, 'Введите свою фамилию и имя в следующем формате: \n'
                                             'Иванов' )
 
 
-@bot.message_handler(func= lambda message: message.text in li)
+
+@bot.message_handler(func=lambda message: message.text in li)
 async def start_message(message):
     us_input = message.text
-    
+
     user_id = message.from_user.id
     print(type(user_id))
     dic[user_id] = us_input
     print(dic)
-    #print(us_input)
-    #print(chat_id)
-    #print(user_id)
+    # print(us_input)
+    # print(chat_id)
+    # print(user_id)
     markup = ReplyKeyboardMarkup(resize_keyboard=True)
     btn1 = KeyboardButton('\U0001F4B0 Инвестиционный портфель')
     btn2 = KeyboardButton('\U0001f3e6 Денежные операции')
@@ -38,11 +41,12 @@ async def start_message(message):
                                             'Вы находитесь в главном меню!'
                                             'Ваш уникальный id: ' + str(user_id), reply_markup=markup)
 
-@bot.message_handler(func= lambda message: message.text in ['\U0001F4B0 Инвестиционный портфель',
-                                                            '\U0001f3e6 Денежные операции',
-                                                            'Чат с менеджером',
-                                                            'Помощь',
-                                                            '\u2B05 Главное меню'])
+
+@bot.message_handler(func=lambda message: message.text in ['\U0001F4B0 Инвестиционный портфель',
+                                                           '\U0001f3e6 Денежные операции',
+                                                           'Чат с менеджером',
+                                                           'Помощь',
+                                                           '\u2B05 Главное меню'])
 async def head_menu(message):
     if (message.text == '\U0001F4B0 Инвестиционный портфель'):
 
@@ -77,17 +81,20 @@ async def head_menu(message):
         markup.add(btn1, btn2, btn3, btn4)
         await bot.send_message(message.chat.id, 'вернулись в меню', reply_markup=markup)
 
-@bot.message_handler(func= lambda message: message.text in ['\U0001F4B1 Договор'])
+
+@bot.message_handler(func=lambda message: message.text in ['\U0001F4B1 Договор'])
 async def invest_protfel(message):
     if (message.text == '\U0001F4B1 Договор'):
         await bot.send_message(message.chat.id, 'тут выводится pdf файл с договором')
 
-@bot.message_handler(func= lambda message: message.text in ['Пополнить', 'Вывод'])
+
+@bot.message_handler(func=lambda message: message.text in ['Пополнить', 'Вывод'])
 async def money_flow(message):
     if (message.text == 'Пополнить'):
         await bot.send_message(message.chat.id, 'выводится реквизит счета и фунцкия добавления фото чека')
     elif (message.text == 'Вывод'):
         await bot.send_message(message.chat.id, 'Указывается сумма и дата вывода')
+
 
 @bot.message_handler(func=lambda message: message.text in ['Продление договора', 'Онлайн', 'Встреча', 'Вопрос', 'back'])
 async def chat_with_manager(message):
@@ -112,21 +119,22 @@ async def chat_with_manager(message):
         markup.add(btn1, btn2, btn3)
         await bot.send_message(message.chat.id, 'выбрать действие', reply_markup=markup)
 
-@bot.message_handler(func= lambda message: True)
+
+
+@bot.message_handler(regexp= r'[0-9]+')
 async def num(message):
     u_input = int(message.text)
     name = dic[u_input]
 
     cursor.execute("SELECT Last_name, sum(all_money) "
-                       "FROM main "
-                       "WHERE Last_name = ?"
-                       "GROUP by Last_name", (name,))
+                   "FROM main "
+                   "WHERE Last_name = ?"
+                   "GROUP by Last_name", (name,))
     results = cursor.fetchall()
     if results:
         await bot.send_message(message.chat.id, 'Всего: ' + str(results[0][1]))
     else:
         await bot.send_message(message.chat.id, "Нет данных по данному запросу")
-
 
 
 if __name__ == '__main__':
