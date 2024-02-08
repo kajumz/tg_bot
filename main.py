@@ -23,7 +23,6 @@ async def st(message):
 @bot.message_handler(func=lambda message: message.text in li)
 async def start_message(message):
     us_input = message.text
-
     user_id = message.from_user.id
     print(type(user_id))
     dic[user_id] = us_input
@@ -49,12 +48,24 @@ async def start_message(message):
                                                            '\u2B05 Главное меню'])
 async def head_menu(message):
     if (message.text == '\U0001F4B0 Инвестиционный портфель'):
-
         markup = ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
         btn1 = KeyboardButton('\U0001F4B1 Договор')
         btn2 = KeyboardButton('\u2B05 Главное меню')
+        #markup.add(btn1, btn2)
+        u_input = message.from_user.id
+        name = dic[u_input]
+
+        cursor.execute("SELECT Last_name, sum(all_money) "
+                        "FROM main "
+                        "WHERE Last_name = ?"
+                        "GROUP by Last_name", (name,))
+        results = cursor.fetchall()
+        #if results:
         markup.add(btn1, btn2)
-        await bot.send_message(message.chat.id, 'Введите уникальный номер', reply_markup=markup)
+        await bot.send_message(message.chat.id, 'Всего: ' + str(results[0][1]), reply_markup=markup)
+        #else:
+            #await bot.send_message(message.chat.id, "Нет данных по данному запросу", reply_markup=markup)
+        #await bot.send_message(message.chat.id, 'Введите уникальный номер', reply_markup=markup)
     elif (message.text == '\U0001f3e6 Денежные операции'):
         markup_one = ReplyKeyboardMarkup(resize_keyboard=True)
         btn1 = KeyboardButton('Пополнить')
