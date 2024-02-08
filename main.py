@@ -2,7 +2,11 @@ from telebot.async_telebot import AsyncTeleBot
 from telebot.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton, InlineKeyboardMarkup
 import asyncio
 import sqlite3
+import requests
+from PIL import Image
+import io
 
+TOKEN = '6000559993:AAFl7pLjyLw6tWeSa31-OZ0_muDyPAE9INQ'
 bot = AsyncTeleBot('6000559993:AAFl7pLjyLw6tWeSa31-OZ0_muDyPAE9INQ')
 conn = sqlite3.connect('test.db')
 cursor = conn.cursor()
@@ -105,6 +109,22 @@ async def money_flow(message):
         await bot.send_message(message.chat.id, 'выводится реквизит счета и фунцкия добавления фото чека')
     elif (message.text == 'Вывод'):
         await bot.send_message(message.chat.id, 'Указывается сумма и дата вывода')
+
+@bot.message_handler(content_types=['photo'])
+async def photo_sent(message):
+    file_i = message.photo[-1].file_id
+    file_path_response = requests.get(f'https://api.telegram.org/bot{TOKEN}/getFile?file_id={file_i}')
+    file_pat = file_path_response.json()
+    file_path = file_pat['result']['file_path']
+    image_url = f'https://api.telegram.org/file/bot{TOKEN}/{file_path}'
+
+    image_response = requests.get(image_url)
+    #print(image_response.content)
+    print('11')
+    with open(r"D:\tg_bot_for_helps\Photos\photo_{file_i}.jpg", "wb") as photo_file:
+        photo_file.write(image_response.content)
+    print('222')
+    await bot.send_message(message.chat.id, 'Фото успешно загружено')
 
 
 @bot.message_handler(func=lambda message: message.text in ['Продление договора', 'Онлайн', 'Встреча', 'Вопрос', 'back'])
