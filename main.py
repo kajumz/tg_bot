@@ -1,3 +1,5 @@
+import datetime
+
 from telebot.async_telebot import AsyncTeleBot
 from telebot.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton, InlineKeyboardMarkup
 import asyncio
@@ -5,6 +7,7 @@ import sqlite3
 import requests
 from PIL import Image
 import io
+import csv
 
 TOKEN = '6000559993:AAFl7pLjyLw6tWeSa31-OZ0_muDyPAE9INQ'
 bot = AsyncTeleBot('6000559993:AAFl7pLjyLw6tWeSa31-OZ0_muDyPAE9INQ')
@@ -15,6 +18,7 @@ li = ['Иванов', 'Сидоров', 'Петров']
 
 us_input = str()
 dic = dict()
+dic_money = dict()
 
 
 @bot.message_handler(commands=['start'])
@@ -106,9 +110,10 @@ async def invest_protfel(message):
 @bot.message_handler(func=lambda message: message.text in ['Пополнить', 'Вывод'])
 async def money_flow(message):
     if (message.text == 'Пополнить'):
-        await bot.send_message(message.chat.id, 'выводится реквизит счета и фунцкия добавления фото чека')
+        await bot.send_message(message.chat.id, '12314325435 - реквизит счета \n'
+                                                'После перевода отправьте в чат фото чека)')
     elif (message.text == 'Вывод'):
-        await bot.send_message(message.chat.id, 'Указывается сумма и дата вывода')
+        await bot.send_message(message.chat.id, "Введите сумму ")
 
 @bot.message_handler(content_types=['photo'])
 async def photo_sent(message):
@@ -121,7 +126,7 @@ async def photo_sent(message):
     image_response = requests.get(image_url)
     #print(image_response.content)
     print('11')
-    with open(r"D:\tg_bot_for_helps\Photos\photo_{file_i}.jpg", "wb") as photo_file:
+    with open(r"D:\tg_bot_for_helps\Photos\photo_{}.jpg".format(file_i), "wb") as photo_file:
         photo_file.write(image_response.content)
     print('222')
     await bot.send_message(message.chat.id, 'Фото успешно загружено')
@@ -154,19 +159,34 @@ async def chat_with_manager(message):
 
 @bot.message_handler(regexp= r'[0-9]+')
 async def num(message):
-    u_input = int(message.text)
-    name = dic[u_input]
+    money = message.text
+    u_id = message.from_user.id
+    dic_money[u_id] = money
+    markup = InlineKeyboardMarkup()
+    today = datetime.date.today()
+    for i in range(10):
+        date = today + datetime.timedelta(days=i)
+        callback_data = f'date_{date.strftime("%Y-%m-%d")}'
+        markup.add(InlineKeyboardButton(text=date.strftime("%Y-%m-%d"), callback_data=callback_data))
+    await bot.send_message(message.chat.id, "Выберите дату:", reply_markup=markup)
 
-    cursor.execute("SELECT Last_name, sum(all_money) "
-                   "FROM main "
-                   "WHERE Last_name = ?"
-                   "GROUP by Last_name", (name,))
-    results = cursor.fetchall()
-    if results:
-        await bot.send_message(message.chat.id, 'Всего: ' + str(results[0][1]))
-    else:
-        await bot.send_message(message.chat.id, "Нет данных по данному запросу")
+@bot.callback_query_handler(func=lambda call: True)
+async def callback_query(call):
+    if call.data.startswith('date_'):
+        selected_date = call.data.split('_')[1]
+        user_id = call.from_user.id
+        name = dic[user_id]
+        money = dic_money[user_id]
+        print(name)
+        print(money)
+        print(type((selected_date)))
+        write_to_csv(name, money, selected_date)
+        await bot.answer_callback_query(call.id, f"Вы выбрали дату: {selected_date}")
 
+def write_to_csv(name, money, date):
+    with open('data.csv', mode='a', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow([name, money, date])
 
 if __name__ == '__main__':
     asyncio.run(bot.polling())
